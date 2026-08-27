@@ -1,3 +1,5 @@
+import { ADMIN_CSRF_HEADER, FetchOptions } from './fetch';
+
 const semverGt = require('semver/functions/gt');
 
 /* eslint-disable prefer-destructuring */
@@ -7,7 +9,15 @@ export const NEXT_PUBLIC_API_HOST = process.env.NEXT_PUBLIC_API_HOST;
 
 const API_LOCATION = `${NEXT_PUBLIC_API_HOST}api/admin/`;
 
-export const ADMIN_CSRF_HEADER = 'X-Owncast-CSRF-Protection';
+// Generic fetch helpers live in utils/fetch.ts so viewer-path code can use
+// them without pulling this admin barrel into the boot bundle. Re-exported
+// here for the many admin callers that import them from this module.
+export {
+  ADMIN_CSRF_HEADER,
+  extractAPIErrorMessage,
+  fetchData,
+  getUnauthedData,
+} from './fetch';
 
 export const FETCH_INTERVAL = 15000;
 
@@ -145,74 +155,6 @@ export const API_YP_RESET = `${API_LOCATION}yp/reset`;
 
 const GITHUB_RELEASE_URL = 'https://api.github.com/repos/owncast/owncast/releases/latest';
 
-interface FetchOptions {
-  data?: any;
-  method?: string;
-  auth?: boolean;
-}
-
-export function extractAPIErrorMessage(status: number, body?: any, fallbackText = '') {
-  if (body && typeof body === 'object') {
-    if (typeof body.error === 'string' && body.error.trim() !== '') {
-      return body.error;
-    }
-    if (typeof body.message === 'string' && body.message.trim() !== '') {
-      return body.message;
-    }
-  }
-
-  if (fallbackText.trim() !== '') {
-    return fallbackText;
-  }
-
-  return `An error has occurred: ${status}`;
-}
-
-export async function fetchData<T = any>(url: string, options?: FetchOptions): Promise<T> {
-  const { data, method = 'GET', auth = true } = options || {};
-
-  // eslint-disable-next-line no-undef
-  const requestOptions: RequestInit = {
-    method,
-  };
-
-  const headers: Record<string, string> = {};
-  if (!['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) {
-    headers[ADMIN_CSRF_HEADER] = '1';
-  }
-
-  if (data) {
-    requestOptions.body = JSON.stringify(data);
-  }
-
-  requestOptions.headers = headers;
-
-  if (auth && ADMIN_USERNAME && ADMIN_STREAMKEY) {
-    const encoded = btoa(`${ADMIN_USERNAME}:${ADMIN_STREAMKEY}`);
-    headers.Authorization = `Basic ${encoded}`;
-    requestOptions.mode = 'cors';
-    requestOptions.credentials = 'include';
-  }
-
-  const response = await fetch(url, requestOptions);
-  const text = await response.text();
-  let json: T = {} as T;
-  if (text) {
-    try {
-      json = JSON.parse(text) as T;
-    } catch {
-      if (response.ok) {
-        throw new Error('Invalid JSON response from server');
-      }
-    }
-  }
-
-  if (!response.ok) {
-    throw new Error(extractAPIErrorMessage(response.status, json, text));
-  }
-  return json;
-}
-
 // fetchText mirrors fetchData's admin auth handling but returns the raw
 // response body as text instead of parsing JSON. Used for endpoints that
 // serve plain text/markdown (e.g. a plugin's INSTRUCTIONS.md).
@@ -242,15 +184,6 @@ export async function fetchText(url: string, options?: FetchOptions) {
     throw new Error(`An error has occurred: ${response.status}`);
   }
   return response.text();
-}
-
-export async function getUnauthedData(url: string, options?: FetchOptions) {
-  const opts = {
-    method: 'GET',
-    auth: false,
-    ...options,
-  };
-  return fetchData(url, opts);
 }
 
 export async function fetchExternalData(url: string) {

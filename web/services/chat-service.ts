@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 import { ChatMessage } from '../interfaces/chat-message.model';
-import { getUnauthedData } from '../utils/apis';
+import { getUnauthedData } from '../utils/fetch';
 
 const ENDPOINT = `/api/chat`;
 const URL_CHAT_REGISTRATION = `/api/chat/register`;
