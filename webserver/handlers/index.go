@@ -5,6 +5,7 @@ import (
 	"crypto/md5" // nolint:gosec
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"mime"
 	"net/http"
 	"net/url"
@@ -95,6 +96,13 @@ func (h *Handlers) renderIndexHtml(w http.ResponseWriter, r *http.Request, nonce
 		ServerConfigJSON string
 		EmbedVideo       string
 		Nonce            string
+		// Offline and the pre-rendered HTML below fill in the server-rendered
+		// offline preview (see web/components/ServerRendered/
+		// ServerRenderedPreview.tsx) so the page paints its largest content
+		// before the client bundle boots.
+		Offline              bool
+		OfflineMessageHTML   template.HTML
+		ExtraPageContentHTML template.HTML
 	}
 
 	status := h.getStatusResponse()
@@ -124,6 +132,13 @@ func (h *Handlers) renderIndexHtml(w http.ResponseWriter, r *http.Request, nonce
 		ServerConfigJSON: string(cb),
 		EmbedVideo:       "embed/video",
 		Nonce:            nonce,
+		Offline:          !status.Online,
+		// Both values are admin-authored markdown already rendered and
+		// sanitized server-side, and the client injects the same strings into
+		// the DOM once it boots, so marking them as trusted HTML here does not
+		// widen what ends up on the page.
+		OfflineMessageHTML:   template.HTML(config.OfflineMessage),   // nolint:gosec
+		ExtraPageContentHTML: template.HTML(config.ExtraPageContent), // nolint:gosec
 	}
 
 	index, err := static.GetWebIndexTemplate()

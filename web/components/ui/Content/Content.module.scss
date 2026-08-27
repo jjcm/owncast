@@ -138,6 +138,18 @@
   display: grid;
 }
 
+// The server-rendered offline preview painted while the app boots. When the
+// server substituted real content into it, the loading spinner next to it is
+// redundant, so hide the spinner. When the container is empty (stream online,
+// or dev builds where no substitution happens) the spinner shows as before.
+.serverRenderedPreview {
+  width: 100%;
+
+  &:not(:empty) + div {
+    display: none;
+  }
+}
+
 .bottomPageContentContainer {
   background-color: var(--theme-color-components-content-background);
   padding: calc(2 * var(--content-padding));

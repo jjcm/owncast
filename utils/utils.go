@@ -231,7 +231,11 @@ func GetCacheDurationSecondsForPath(filePath string) int {
 	} else if fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".gif" || fileExtension == ".svg" {
 		return 60 * 60 * 24 * defaultDaysCached
 	} else if fileExtension == ".html" || filename == "/" || fileExtension == "" {
-		return 0
+		// A short freshness window lets quick revisits and back/forward
+		// navigations reuse the document without refetching it, while staying
+		// short enough that config changes show up promptly. Live-state
+		// changes do not depend on this: the client polls status after boot.
+		return 60
 	}
 
 	// Default cache length in seconds

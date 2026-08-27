@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/CAFxX/httpcompression"
+	"github.com/CAFxX/httpcompression/contrib/andybalholm/brotli"
 	"github.com/go-chi/chi/v5"
 	chiMW "github.com/go-chi/chi/v5/middleware"
 	log "github.com/sirupsen/logrus"
@@ -125,7 +126,18 @@ func Start(cfg *config.Config, enableVerboseLogging bool, h *handlers.Handlers, 
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)
 
-	compress, _ := httpcompression.DefaultAdapter() // Use the default configuration
+	// Prefer brotli over the default codec ordering for dynamic responses:
+	// it compresses the HTML document noticeably denser than zstandard at a
+	// comparable runtime cost, and every current browser accepts it. The
+	// priority just needs to beat the built-in zstandard priority so content
+	// negotiation picks brotli when the client allows both.
+	brotliCompressor, err := brotli.New(brotli.Options{Quality: 6})
+	if err != nil {
+		log.Errorln("unable to create brotli compressor", err)
+	}
+	compress, _ := httpcompression.DefaultAdapter(
+		httpcompression.Compressor(brotli.Encoding, -40, brotliCompressor),
+	)
 	server := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", ip, port),
 		ReadHeaderTimeout: 4 * time.Second,
