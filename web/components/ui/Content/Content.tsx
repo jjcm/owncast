@@ -28,6 +28,7 @@ import {
 import styles from './Content.module.scss';
 import desktopStyles from './DesktopContent.module.scss';
 import { OfflineBanner } from '../OfflineBanner/OfflineBanner';
+import { ServerRenderedPreview } from '../../ServerRendered/ServerRenderedPreview';
 import { Statusbar } from '../Statusbar/Statusbar';
 import { ExternalAction } from '../../../interfaces/external-action';
 import { DesktopContent } from './DesktopContent';
@@ -265,12 +266,15 @@ export const Content: FC = () => {
     <div className={styles.main}>
       <div className={styles.mainColumn}>
         {appState.appLoading && (
-          <div
-            className={classnames([styles.topSectionElement, styles.centerSpinner])}
-            style={{ height: '30vh' }}
-          >
-            <Spin delay={2} size="large" tip="One moment..." />
-          </div>
+          <>
+            <ServerRenderedPreview className={styles.serverRenderedPreview} />
+            <div
+              className={classnames([styles.topSectionElement, styles.centerSpinner])}
+              style={{ height: '30vh' }}
+            >
+              <Spin delay={2} size="large" tip="One moment..." />
+            </div>
+          </>
         )}
         <Row>
           {online && configLoaded && (
