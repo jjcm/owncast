@@ -1,24 +1,24 @@
-import Bowser from 'bowser';
-
 export function getDiffInDaysFromNow(timestamp) {
   const time = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
   return (new Date() - time) / (24 * 3600 * 1000);
 }
 
+// Detects Safari on an iOS/iPadOS device with plain user-agent checks rather
+// than a UA-parsing library: this file is on the viewer boot path and the
+// library was its only heavy dependency. Every browser on iOS is WebKit, but
+// only real Safari lacks the third-party browser tokens checked below.
+// Desktop-class iPadOS Safari reports a Mac platform, so it is recognized by
+// its touch support instead of the user agent.
 export const isMobileSafariIos = () => {
   try {
-    const { browser, platform } = Bowser.parse(navigator.userAgent);
+    const ua = navigator.userAgent;
     const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-
-    if (!isIPadOS && platform.vendor !== 'Apple') {
+    const isIOSDevice = isIPadOS || /iPhone|iPad|iPod/.test(ua);
+    if (!isIOSDevice) {
       return false;
     }
 
-    if (!isIPadOS && platform.type !== 'mobile' && platform.type !== 'tablet') {
-      return false;
-    }
-
-    return browser.name === 'Mobile Safari' || browser.name === 'Safari';
+    return /Safari/.test(ua) && !/CriOS|FxiOS|OPiOS|OPT\/|EdgiOS|DuckDuckGo|mercury/.test(ua);
   } catch {
     return false;
   }
