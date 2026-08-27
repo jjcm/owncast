@@ -8,7 +8,6 @@ import styles from './Content.module.scss';
 import { CustomPageContent } from '../CustomPageContent/CustomPageContent';
 import { PluginTabFrame } from '../PluginTabFrame/PluginTabFrame';
 import { ContentHeader } from '../../common/ContentHeader/ContentHeader';
-import { ComponentError } from '../ComponentError/ComponentError';
 
 export type DesktopContentProps = {
   name: string;
@@ -27,6 +26,15 @@ export type DesktopContentProps = {
 const Tabs: ComponentType<TabsProps> = dynamic(() => import('antd').then(mod => mod.Tabs), {
   ssr: false,
 });
+
+// Error-state fallback only mounts when a child component throws, so it does
+// not need to be in the boot bundle.
+const ComponentError = dynamic(
+  () => import('../ComponentError/ComponentError').then(mod => mod.ComponentError),
+  {
+    ssr: false,
+  },
+);
 
 const FollowerCollection = dynamic(
   () =>

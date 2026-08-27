@@ -12,7 +12,6 @@ import styles from './Content.module.scss';
 import { CustomPageContent } from '../CustomPageContent/CustomPageContent';
 import { PluginTabFrame } from '../PluginTabFrame/PluginTabFrame';
 import { ContentHeader } from '../../common/ContentHeader/ContentHeader';
-import { ComponentError } from '../ComponentError/ComponentError';
 
 export type MobileContentProps = {
   name: string;
@@ -50,6 +49,15 @@ const FollowerCollection = dynamic(
 const StreamsTab = dynamic(() => import('../StreamsTab/StreamsTab').then(mod => mod.StreamsTab), {
   ssr: false,
 });
+
+// Error-state fallback only mounts when a child component throws, so it does
+// not need to be in the boot bundle.
+const ComponentError = dynamic(
+  () => import('../ComponentError/ComponentError').then(mod => mod.ComponentError),
+  {
+    ssr: false,
+  },
+);
 
 const ComponentErrorFallback = ({ error, resetErrorBoundary }) => (
   <ComponentError

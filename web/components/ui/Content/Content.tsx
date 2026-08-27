@@ -30,13 +30,19 @@ import desktopStyles from './DesktopContent.module.scss';
 import { OfflineBanner } from '../OfflineBanner/OfflineBanner';
 import { Statusbar } from '../Statusbar/Statusbar';
 import { ExternalAction } from '../../../interfaces/external-action';
-import { Modal } from '../Modal/Modal';
 import { DesktopContent } from './DesktopContent';
 import { MobileContent } from './MobileContent';
 import { Footer } from '../Footer/Footer';
 import { useFederatedServers } from '../../../hooks/useFederatedServers';
 
 // Lazy loaded components
+
+// The external-action modal only mounts after a viewer clicks an action
+// button, so its modal shell stays out of the boot bundle.
+const Modal = dynamic(() => import('../Modal/Modal').then(mod => mod.Modal), {
+  ssr: false,
+});
+
 const ChatContainer = dynamic(
   () => import('../../chat/ChatContainer/ChatContainer').then(mod => mod.ChatContainer),
   {
